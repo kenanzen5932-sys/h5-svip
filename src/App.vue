@@ -270,13 +270,7 @@ const loadSvipData = async () => {
           })
         }
       }
-      // Hiç veri yoksa varsayılan göster
-      if (benefitsMap[lvl].length === 0) {
-        benefitsMap[lvl] = [
-          { id: 'badge', name: 'SVIP Rozeti', icon: '🏅', type: 'feature' },
-          { id: 'puan', name: `${(levelRow.return_points / 1000000).toFixed(0)}M İade Puan`, icon: '💎', type: 'feature' },
-        ]
-      }
+      // Sadece veritabanındaki verileri kullan, fake item ekleme
     }
     allLevelBenefits.value = benefitsMap
   } catch (err) {
@@ -372,7 +366,7 @@ const goBack = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30px 20px 10px 20px;
+  padding: max(30px, env(safe-area-inset-top)) 20px 10px 20px;
   z-index: 10;
 }
 .icon-btn {
