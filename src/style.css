@@ -1,0 +1,57 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  width: 100%;
+  min-height: 100%;
+  background: #000;
+  color: white;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  user-select: none; /* Metin seçimi engelle */
+  -webkit-user-select: none;
+}
+
+/* Chrome/Safari kaydırma çubuğunu gizleme */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Swiper Özel Tasarımı */
+.swiper-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.swiper-slide {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Parıltı Efekti (Shiny Animation) */
+@keyframes shimmer {
+  0% { transform: translateX(-150%) skewX(-15deg); }
+  50% { transform: translateX(150%) skewX(-15deg); }
+  100% { transform: translateX(150%) skewX(-15deg); }
+}
+
+.shiny-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.shiny-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateX(-150%) skewX(-15deg);
+  animation: shimmer 3s infinite;
+}
