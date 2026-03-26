@@ -233,15 +233,6 @@ const allLevelBenefits = ref({})
 
 const currentBenefits = computed(() => allLevelBenefits.value[currentLevel.value] || [])
 
-const levelToBenefits = (levelRow) => {
-  const benefits = []
-  if (levelRow.has_colored_name) benefits.push({ id: 'col_name', name: 'Renkli İsim', icon: '🎨', type: 'feature' })
-  if (levelRow.has_anti_kick)    benefits.push({ id: 'anti_kick', name: 'Ban Koruması', icon: '🛡️', type: 'feature' })
-  if (levelRow.can_upload_gif)   benefits.push({ id: 'gif', name: 'GIF Profil', icon: '🎬', type: 'feature' })
-  if (levelRow.can_hide_online)  benefits.push({ id: 'hide', name: 'Gizli Giriş', icon: '🕵️', type: 'feature' })
-  return benefits
-}
-
 const loadSvipData = async () => {
   isLoading.value = true
   try {
@@ -250,15 +241,30 @@ const loadSvipData = async () => {
     if (levelsErr) throw levelsErr
     svipLevelData.value = levels
 
+    // Hediye eşyalar - is_active filtresi YOK (gizli eşyalar da verilecek)
     const { data: rewards, error: rewardsErr } = await supabase
       .from('svip_rewards')
-      .select('level, store_items(id, name, thumbnail_url, type)')
+      .select('level, store_items(id, name, thumbnail_url, type, is_active)')
     if (rewardsErr) throw rewardsErr
+
+    // Dinamik ayrıcalıklar - svip_benefits tablosundan
+    const { data: svipBenefits } = await supabase
+      .from('svip_benefits')
+      .select('level, name, icon_url')
+      .order('id')
 
     const benefitsMap = {}
     for (const levelRow of levels) {
       const lvl = levelRow.level
-      benefitsMap[lvl] = levelToBenefits(levelRow)
+      benefitsMap[lvl] = []
+
+      // 1) Ayrıcalıklar (svip_benefits)
+      const lvlBenefits = (svipBenefits || []).filter(b => b.level === lvl)
+      for (const b of lvlBenefits) {
+        benefitsMap[lvl].push({ id: `b_${b.name}`, name: b.name, icon: b.icon_url || '✨', type: 'feature' })
+      }
+
+      // 2) Hediye eşyalar (svip_rewards)
       const levelRewards = (rewards || []).filter(r => r.level === lvl)
       for (const reward of levelRewards) {
         if (reward.store_items) {
@@ -270,7 +276,6 @@ const loadSvipData = async () => {
           })
         }
       }
-      // Sadece veritabanındaki verileri kullan, fake item ekleme
     }
     allLevelBenefits.value = benefitsMap
   } catch (err) {
