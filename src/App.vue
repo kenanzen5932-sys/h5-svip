@@ -82,9 +82,6 @@
 
     </div> <!-- top-info-section end -->
 
-    <!-- Spacer to push the rest down nicely -->
-    <div style="flex: 1; min-height: 20px;"></div>
-
     <!-- 3. Alt Kısım: SVIP Ayrıcalıkları -->
     <div class="benefits-section" style="margin-bottom: 30px;">
       
