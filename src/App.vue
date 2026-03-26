@@ -241,10 +241,10 @@ const loadSvipData = async () => {
     if (levelsErr) throw levelsErr
     svipLevelData.value = levels
 
-    // Hediye eşyalar - is_active filtresi YOK (gizli eşyalar da verilecek)
+    // Hediye eşyalar - svip_rewards_full view RLS bypass eder, gizli eşyalar da gelir
     const { data: rewards, error: rewardsErr } = await supabase
-      .from('svip_rewards')
-      .select('level, store_items(id, name, thumbnail_url, type, is_active)')
+      .from('svip_rewards_full')
+      .select('level, item_id, item_name, thumbnail_url, item_type')
     if (rewardsErr) throw rewardsErr
 
     // Dinamik ayrıcalıklar - svip_benefits tablosundan
@@ -267,12 +267,12 @@ const loadSvipData = async () => {
       // 2) Hediye eşyalar (svip_rewards)
       const levelRewards = (rewards || []).filter(r => r.level === lvl)
       for (const reward of levelRewards) {
-        if (reward.store_items) {
+        if (reward.item_id) {
           benefitsMap[lvl].push({
-            id: reward.store_items.id,
-            name: reward.store_items.name,
-            icon: reward.store_items.thumbnail_url || '',
-            type: reward.store_items.type
+            id: reward.item_id,
+            name: reward.item_name,
+            icon: reward.thumbnail_url || '',
+            type: reward.item_type
           })
         }
       }
