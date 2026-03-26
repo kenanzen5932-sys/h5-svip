@@ -53,7 +53,7 @@
           <div class="progress-bar-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
         <div class="progress-text">
-          üstünü doldurmak <span class="highlight">{{ remainingCoins }}</span> {{ currentLevel }} seviyesine yükseltin
+          SVIP {{ currentLevel }} Olmak İçin <span class="highlight">{{ remainingCoins }}</span> Daha Yükle
         </div>
       </div>
     </div>
@@ -149,11 +149,10 @@ const currentBgImage = computed(() => {
 })
 
 // ─── PAG Madalya Animasyonu ───────────────────────────────────────────────────
-const pagUrls = import.meta.glob('./assets/SVIP/SVIPMEDALS/*.pag', { as: 'url', eager: true });
 
 const currentPagSrc = computed(() => {
   const fileName = currentLevel.value === 9 ? 'SVIP9 MADALYA.pag' : `SVIP${currentLevel.value}MADALYA.pag`;
-  return pagUrls[`./assets/SVIP/SVIPMEDALS/${fileName}`] || '';
+  return `/SVIPMEDALS/${fileName}`;
 })
 
 let PAG = null;
