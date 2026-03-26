@@ -56,14 +56,6 @@
           SVIP {{ currentLevel }} Olmak İçin <span class="highlight">{{ remainingCoins }}</span> Daha Yükle
         </div>
       </div>
-    </div>
-
-    <!-- Spacer to push the rest down, allowing the background image's center to be visible -->
-    <div style="flex: 1; min-height: 30px;"></div>
-
-    <!-- 3. Alt Kısım: Noktalar ve SVIP Ayrıcalıkları -->
-    <div class="benefits-section" style="margin-bottom: 30px;">
-      
       <!-- SVIP Geçiş Çubuğu (Noktalar) -->
       <div class="levels-slider-container">
         <div class="levels-track">
@@ -88,6 +80,14 @@
         </div>
       </div>
 
+    </div> <!-- top-info-section end -->
+
+    <!-- Spacer to push the rest down nicely -->
+    <div style="flex: 1; min-height: 20px;"></div>
+
+    <!-- 3. Alt Kısım: SVIP Ayrıcalıkları -->
+    <div class="benefits-section" style="margin-bottom: 30px;">
+      
       <div class="benefits-subtitle">
         <span class="deco">〰️</span> SVIP Ayrıcalıkları <span class="deco">〰️</span>
       </div>
