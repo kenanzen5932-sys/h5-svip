@@ -52,7 +52,10 @@
         <div class="progress-bar-bg">
           <div class="progress-bar-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
-        <div class="progress-text">
+        <div class="progress-text" v-if="userSvipLevel >= currentLevel">
+          🎉 Zaten SVIP {{ currentLevel }} seviyesine ulaştınız!
+        </div>
+        <div class="progress-text" v-else>
           SVIP {{ currentLevel }} Olmak İçin <span class="highlight">{{ remainingCoins }}</span> Daha Yükle
         </div>
       </div>
@@ -302,12 +305,12 @@ const loadUserData = async () => {
   userName.value = data.username || 'NEVER'
   userAvatar.value = data.avatar_url || 'https://i.pravatar.cc/150?img=11'
   userSvipPoints.value = data.svip_points || 0
-  let computedLevel = 1
+  let computedLevel = 0
   for (const lvl of svipLevelData.value) {
     if (userSvipPoints.value >= lvl.required_points) computedLevel = lvl.level
   }
   userSvipLevel.value = computedLevel
-  currentLevel.value = computedLevel
+  currentLevel.value = Math.max(1, computedLevel)
 }
 
 onMounted(async () => {
