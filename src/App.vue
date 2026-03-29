@@ -261,13 +261,7 @@ const loadSvipData = async () => {
       const lvl = levelRow.level
       benefitsMap[lvl] = []
 
-      // 1) Ayrıcalıklar (svip_benefits)
-      const lvlBenefits = (svipBenefits || []).filter(b => b.level === lvl)
-      for (const b of lvlBenefits) {
-        benefitsMap[lvl].push({ id: `b_${b.name}`, name: b.name, icon: b.icon_url || '✨', type: 'feature' })
-      }
-
-      // 2) Hediye eşyalar (svip_rewards)
+      // 1) Hediye eşyalar (svip_rewards) — ÖNCE ÜSTTE
       const levelRewards = (rewards || []).filter(r => r.level === lvl)
       for (const reward of levelRewards) {
         if (reward.item_id) {
@@ -278,6 +272,12 @@ const loadSvipData = async () => {
             type: reward.item_type
           })
         }
+      }
+
+      // 2) Ayrıcalıklar (svip_benefits) — ALTTA SONDA
+      const lvlBenefits = (svipBenefits || []).filter(b => b.level === lvl)
+      for (const b of lvlBenefits) {
+        benefitsMap[lvl].push({ id: `b_${b.name}`, name: b.name, icon: b.icon_url || '✨', type: 'feature' })
       }
     }
     allLevelBenefits.value = benefitsMap
