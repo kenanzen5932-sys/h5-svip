@@ -288,11 +288,11 @@ const loadSvipData = async () => {
   }
 }
 
+let userId = null
+
 const loadUserData = async () => {
-  const urlParams = new URLSearchParams(window.location.search)
-  const userId = urlParams.get('user_id')
   if (!userId) {
-    userName.value = 'NEVER'
+    userName.value = 'GÜVENLİK HATASI'
     userSvipPoints.value = 0
     userSvipLevel.value = 1
     return
@@ -314,9 +314,51 @@ const loadUserData = async () => {
 }
 
 onMounted(async () => {
+  // GÜVENLİK: URL param yerine Flutter InAppWebView içinden gizlice alınmalı
+  if (!window.flutter_inappwebview) {
+    alert("🔒 Güvenlik İhlali: Lütfen bu sayfayı Zabu Uygulaması içinden açın.")
+    return
+  }
+
+  try {
+    const auth = await window.flutter_inappwebview.callHandler('getSupabaseAuth')
+    if (auth && auth.uuid) {
+      userId = auth.uuid
+      if (auth.token) {
+        await supabase.auth.setSession({ access_token: auth.token, refresh_token: auth.token })
+      }
+    } else {
+      alert("Oturum bilgileri alınamadı.")
+      return
+    }
+  } catch (e) {
+    console.error("Auth bridge hatası:", e)
+  }
+
   await loadSvipData()
   await loadUserData()
   loadPagAnimation(currentPagSrc.value)
+
+  // REALTIME: Puan güncellemelerini anında ekrana yansıt (Admin vb. kaynaklardan)
+  supabase.channel('svip_points_sub_' + userId)
+    .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'profiles', 
+        filter: `id=eq.${userId}` 
+      }, (payload) => {
+        const newPoints = payload.new.svip_points
+        if (newPoints !== undefined) {
+          userSvipPoints.value = newPoints
+          // Ekrandaki seviyeyi baştan hesapla
+          let computedLevel = 0
+          for (const lvl of svipLevelData.value) {
+            if (newPoints >= lvl.required_points) computedLevel = lvl.level
+          }
+          userSvipLevel.value = computedLevel
+          currentLevel.value = Math.max(1, computedLevel)
+        }
+    }).subscribe()
 })
 
 onBeforeUnmount(() => {
