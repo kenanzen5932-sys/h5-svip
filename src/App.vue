@@ -170,7 +170,7 @@ const loadPagAnimation = async (src) => {
   const thisLoadId = ++pagLoadId; // Bu çağrının ID'si
   try {
     if (!PAG) {
-      PAG = await PAGInit({ locateFile: (file) => `https://unpkg.com/libpag@latest/lib/${file}` });
+      PAG = await PAGInit({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/libpag@4.5.42/lib/${file}` });
     }
     if (thisLoadId !== pagLoadId) return; // Eski çağrı — iptal
     const response = await fetch(src);
