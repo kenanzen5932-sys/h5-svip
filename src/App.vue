@@ -17,8 +17,6 @@
         <span class="back-arrow">‹</span>
       </div>
       <div class="header-title">
-        <img src="https://via.placeholder.com/100x40/103a27/f1dd96?text=LOGO" alt="SVIP" class="svip-logo-text" v-if="false" />
-        <h1 class="svip-title-text">SVIP</h1>
       </div>
       <div class="header-actions">
         <div class="action-icon" style="border: none;">
