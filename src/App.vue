@@ -46,15 +46,28 @@
         </div>
       </div>
 
-      <div class="progress-bar-wrapper">
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" :style="{ width: progressPercent + '%' }"></div>
+      <!-- Kilit Aç / Zaten Açık Durumu -->
+      <div class="unlock-section">
+        <div v-if="userSvipLevel >= currentLevel" class="unlock-status unlocked">
+          <span class="unlock-icon">✅</span>
+          <span>SVIP {{ currentLevel }} Açık</span>
         </div>
-        <div class="progress-text" v-if="userSvipLevel >= currentLevel">
-          🎉 Zaten SVIP {{ currentLevel }} seviyesine ulaştınız!
-        </div>
-        <div class="progress-text" v-else>
-          SVIP {{ currentLevel }} Olmak İçin <span class="highlight">{{ remainingCoins }}</span> Daha Yükle
+        <div v-else class="unlock-status locked">
+          <div class="unlock-info">
+            <span class="unlock-price">{{ formatCoins(diffCost) }} Coin</span>
+            <span class="unlock-label">ile SVIP {{ currentLevel }} Aç</span>
+          </div>
+          <button 
+            class="unlock-btn" 
+            :class="{ 'disabled': userCoins < diffCost || isUnlocking }"
+            :disabled="userCoins < diffCost || isUnlocking"
+            @click="unlockLevel"
+          >
+            <span v-if="isUnlocking">Açılıyor...</span>
+            <span v-else-if="userCoins < diffCost">Yetersiz Bakiye</span>
+            <span v-else>Kilidini Aç</span>
+          </button>
+          <div class="coin-balance">Bakiyen: {{ formatCoins(userCoins) }} Coin</div>
         </div>
       </div>
       <!-- SVIP Geçiş Çubuğu (Noktalar) -->
@@ -200,34 +213,56 @@ watch(currentLevel, async () => {
 // ─── Kullanıcı Verileri ───────────────────────────────────────────────────────
 const userName = ref('...')
 const userAvatar = ref('https://i.pravatar.cc/150?img=11')
-const userSvipPoints = ref(0)      // Kullanıcının toplam SVIP puanı
-const userSvipLevel = ref(1)       // Kullanıcının gerçek SVIP seviyesi
+const userCoins = ref(0)           // Kullanıcının coin bakiyesi
+const userSvipLevel = ref(0)       // Kullanıcının gerçek SVIP seviyesi
+const isUnlocking = ref(false)     // Kilit açma işlemi devam ediyor mu
 
 // ─── SVIP Seviye Tablosu (Supabase'den) ──────────────────────────────────────
-const svipLevelData = ref([])  // [{level, required_points, return_points, has_colored_name, ...}]
+const svipLevelData = ref([])  // [{level, required_points, ...}]
 const isLoading = ref(true)
 
-// Şu anki seviyenin gereken puanı
-const currentLevelRequired = computed(() => {
-  const data = svipLevelData.value.find(l => l.level === currentLevel.value)
-  return data ? data.required_points : 0
+// Fark ücreti: hedef seviye fiyatı - mevcut seviye fiyatı
+const diffCost = computed(() => {
+  const targetData = svipLevelData.value.find(l => l.level === currentLevel.value)
+  const currentData = svipLevelData.value.find(l => l.level === userSvipLevel.value)
+  const targetCost = targetData ? targetData.required_points : 0
+  const currentCost = currentData ? currentData.required_points : 0
+  return Math.max(0, targetCost - currentCost)
 })
 
-// Kullanıcının bu seviyeye olan ilerleme yüzdesi
-const progressPercent = computed(() => {
-  if (!currentLevelRequired.value) return 0
-  const pct = (userSvipPoints.value / currentLevelRequired.value) * 100
-  return Math.min(pct, 100)
-})
+// Coin formatlama
+const formatCoins = (num) => {
+  if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B'
+  if (num >= 1000000) return (num / 1000000).toFixed(0) + 'M'
+  if (num >= 1000) return (num / 1000).toFixed(0) + 'K'
+  return num.toString()
+}
 
-// Kalan puan (kısaltılmış)
-const remainingCoins = computed(() => {
-  const rem = Math.max(0, currentLevelRequired.value - userSvipPoints.value)
-  if (rem >= 1000000000) return (rem / 1000000000).toFixed(1) + 'B'
-  if (rem >= 1000000) return (rem / 1000000).toFixed(0) + 'M'
-  if (rem >= 1000) return (rem / 1000).toFixed(0) + 'K'
-  return rem.toString()
-})
+// Kilit açma fonksiyonu
+const unlockLevel = async () => {
+  if (isUnlocking.value || userCoins.value < diffCost.value) return
+  if (currentLevel.value !== userSvipLevel.value + 1) {
+    alert(`Önce SVIP ${userSvipLevel.value + 1} seviyesini açmalısın.`)
+    return
+  }
+  isUnlocking.value = true
+  try {
+    const { data, error } = await supabase.rpc('unlock_svip_level', { p_target_level: currentLevel.value })
+    if (error) throw error
+    if (data && data.success) {
+      userSvipLevel.value = data.new_level
+      userCoins.value = data.remaining_coins
+      // Başarı animasyonu / mesajı
+    } else {
+      alert(data?.message || 'Bir hata oluştu.')
+    }
+  } catch (err) {
+    console.error('Kilit açma hatası:', err)
+    alert('İşlem başarısız oldu.')
+  } finally {
+    isUnlocking.value = false
+  }
+}
 
 // ─── SVIP Ayrıcalıkları (Supabase'den) ────────────────────────────────────────
 const allLevelBenefits = ref({})
@@ -291,24 +326,20 @@ let userId = null
 const loadUserData = async () => {
   if (!userId) {
     userName.value = 'GÜVENLİK HATASI'
-    userSvipPoints.value = 0
-    userSvipLevel.value = 1
+    userCoins.value = 0
+    userSvipLevel.value = 0
     return
   }
   const { data, error } = await supabase
     .from('profiles')
-    .select('username, avatar_url, svip_points')
+    .select('username, avatar_url, coins, vip_level, vip_type')
     .eq('id', userId).single()
   if (error || !data) return
   userName.value = data.username || 'NEVER'
   userAvatar.value = data.avatar_url || 'https://i.pravatar.cc/150?img=11'
-  userSvipPoints.value = data.svip_points || 0
-  let computedLevel = 0
-  for (const lvl of svipLevelData.value) {
-    if (userSvipPoints.value >= lvl.required_points) computedLevel = lvl.level
-  }
-  userSvipLevel.value = computedLevel
-  currentLevel.value = Math.max(1, computedLevel)
+  userCoins.value = data.coins || 0
+  userSvipLevel.value = (data.vip_type === 'svip') ? (data.vip_level || 0) : 0
+  currentLevel.value = Math.max(1, userSvipLevel.value > 0 ? userSvipLevel.value : 1)
 }
 
 onMounted(async () => {
@@ -337,24 +368,21 @@ onMounted(async () => {
   await loadUserData()
   loadPagAnimation(currentPagSrc.value)
 
-  // REALTIME: Puan güncellemelerini anında ekrana yansıt (Admin vb. kaynaklardan)
-  supabase.channel('svip_points_sub_' + userId)
+  // REALTIME: Coin ve SVIP seviye güncellemelerini anında ekrana yansıt
+  supabase.channel('svip_sub_' + userId)
     .on('postgres_changes', { 
         event: 'UPDATE', 
         schema: 'public', 
         table: 'profiles', 
         filter: `id=eq.${userId}` 
       }, (payload) => {
-        const newPoints = payload.new.svip_points
-        if (newPoints !== undefined) {
-          userSvipPoints.value = newPoints
-          // Ekrandaki seviyeyi baştan hesapla
-          let computedLevel = 0
-          for (const lvl of svipLevelData.value) {
-            if (newPoints >= lvl.required_points) computedLevel = lvl.level
-          }
-          userSvipLevel.value = computedLevel
-          currentLevel.value = Math.max(1, computedLevel)
+        const newCoins = payload.new.coins
+        const newLevel = payload.new.vip_level
+        const newType = payload.new.vip_type
+        if (newCoins !== undefined) userCoins.value = newCoins
+        if (newLevel !== undefined && newType === 'svip') {
+          userSvipLevel.value = newLevel
+          currentLevel.value = Math.max(1, newLevel)
         }
     }).subscribe()
 })
@@ -464,20 +492,25 @@ const goBack = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 80px;
 }
 .user-card {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 .medal-container {
-  width: 200px;
-  height: 200px;
+  width: clamp(120px, 30vw, 200px);
+  height: clamp(120px, 30vw, 200px);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: -80px;
+  margin-top: -40px;
   margin-right: -10px;
+  flex-shrink: 0;
 }
 .pag-medal {
   width: 100% !important;
@@ -485,46 +518,96 @@ const goBack = () => {
   object-fit: contain;
 }
 .avatar {
-  width: 70px;
-  height: 70px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  border: none; /* Mavi çerçeve kökünden yok edildi */
+  border: none;
+  flex-shrink: 0;
 }
 .user-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 .username {
   font-weight: bold;
-  font-size: 20px;
+  font-size: 18px;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.progress-bar-wrapper {
-  margin-top: 65px; /* 2 tık (30px) daha aşağı alındı */
+/* Kilit Açma Bölümü */
+.unlock-section {
+  margin-top: 30px;
 }
-.progress-bar-bg {
-  width: 100%;
-  height: 4px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 2px;
-  overflow: hidden;
+.unlock-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
 }
-.progress-bar-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 0.3s ease, background 0.3s ease;
-}
-.progress-text {
-  font-size: 11px;
-  color: #aaa;
-  margin-top: 8px;
-}
-.highlight {
-  color: white;
+.unlock-status.unlocked {
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.08);
+  flex-direction: row;
+  justify-content: center;
+  font-size: 16px;
   font-weight: bold;
-  font-size: 13px;
+  color: #4ade80;
+}
+.unlock-icon {
+  font-size: 20px;
+}
+.unlock-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.unlock-price {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+.unlock-label {
+  font-size: 12px;
+  color: #aaa;
+}
+.unlock-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #f59e0b);
+  color: #000;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+  letter-spacing: 0.5px;
+}
+.unlock-btn:active {
+  transform: scale(0.97);
+}
+.unlock-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #555;
+  color: #999;
+}
+.coin-balance {
+  font-size: 11px;
+  color: #888;
 }
 
 /* Seviye Çizgisi */
