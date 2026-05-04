@@ -924,7 +924,7 @@ const goBack = () => {
 .svip-toast {
   position: fixed;
   left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  top: clamp(220px, 34vh, 320px);
   transform: translateX(-50%);
   z-index: 1200;
   max-width: calc(100% - 32px);
