@@ -162,6 +162,10 @@
       <p>Her SVIP seviyesinde ozel cerceveler, giris efektleri, renkli isim ve daha fazla ozellik acilir. Seviye arttikca ayricaliklar da artar.</p>
     </div>
   </div>
+
+  <transition name="toast-fade">
+    <div v-if="toastVisible" class="svip-toast">{{ toastMessage }}</div>
+  </transition>
 </template>
 
 <script setup>
@@ -265,6 +269,17 @@ const diffCost = computed(() => {
   return Math.max(0, targetCost - currentCost)
 })
 
+// Toast sistemi
+const toastMessage = ref('')
+const toastVisible = ref(false)
+let toastTimer = null
+const showToast = (msg) => {
+  toastMessage.value = msg
+  toastVisible.value = true
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toastVisible.value = false }, 2500)
+}
+
 // Coin formatlama
 const formatCoins = (num) => {
   if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B'
@@ -277,7 +292,7 @@ const formatCoins = (num) => {
 const unlockLevel = async () => {
   if (isUnlocking.value || userCoins.value < diffCost.value) return
   if (currentLevel.value !== userSvipLevel.value + 1) {
-    alert(`Önce SVIP ${userSvipLevel.value + 1} seviyesini açmalısın.`)
+    showToast(`Önce SVIP ${userSvipLevel.value + 1} seviyesini açmalısın.`)
     return
   }
   isUnlocking.value = true
@@ -287,13 +302,13 @@ const unlockLevel = async () => {
     if (data && data.success) {
       userSvipLevel.value = data.new_level
       userCoins.value = data.remaining_coins
-      // Başarı animasyonu / mesajı
+      showToast(`SVIP ${data.new_level} başarıyla açıldı!`)
     } else {
-      alert(data?.message || 'Bir hata oluştu.')
+      showToast(data?.message || 'Bir hata oluştu.')
     }
   } catch (err) {
     console.error('Kilit açma hatası:', err)
-    alert('İşlem başarısız oldu.')
+    showToast('İşlem başarısız oldu.')
   } finally {
     isUnlocking.value = false
   }
@@ -424,6 +439,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (currentPagView && typeof currentPagView.destroy === 'function') currentPagView.destroy()
+  if (toastTimer) clearTimeout(toastTimer)
 })
 
 // ─── Swipe Algoritması ────────────────────────────────────────────────────────
@@ -903,5 +919,35 @@ const goBack = () => {
   height: 6px;
   border-radius: 50%;
   background: #e91e8a;
+}
+
+.svip-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 1200;
+  max-width: calc(100% - 32px);
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(28, 28, 30, 0.92);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
 }
 </style>
