@@ -19,7 +19,7 @@
       <div class="header-title">
       </div>
       <div class="header-actions">
-        <div class="action-icon" style="border: none;">
+        <div class="action-icon" style="border: none; cursor: pointer;" @click="showInfo = true">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M11.1673 14.9169H12.834V16.5836H11.1673V14.9169ZM12.834 13.1291L12.834 14.0836H11.1673L11.1673 12.4169C11.1673 12.1959 11.2551 11.9839 11.4114 11.8276C11.5677 11.6713 11.7796 11.5836 12.0007 11.5836C12.2374 11.5836 12.4692 11.5164 12.6692 11.3898C12.8693 11.2632 13.0292 11.0824 13.1305 10.8684C13.2318 10.6545 13.2703 10.4162 13.2414 10.1812C13.2126 9.94628 13.1176 9.72435 12.9676 9.54126C12.8175 9.35817 12.6186 9.22144 12.3939 9.14699C12.1692 9.07254 11.928 9.06342 11.6983 9.12069C11.4686 9.17797 11.2599 9.29928 11.0965 9.47053C10.933 9.64177 10.7195 9.91688 10.7195 10.2436L9.08398 9.91688C9.08398 9.50022 9.47472 8.78384 9.81752 8.39718C10.1603 8.01052 10.5997 7.72183 11.0906 7.56064C11.5816 7.39944 12.1065 7.37152 12.6118 7.47973C13.1171 7.58794 13.5846 7.82839 13.9665 8.17651C14.3483 8.52462 14.6309 8.96791 14.7853 9.46105C14.9397 9.95418 14.9604 10.4795 14.8452 10.9832C14.73 11.4869 14.4831 11.9511 14.1297 12.3281C13.7764 12.7051 13.3292 12.9816 12.834 13.1291Z"
@@ -49,7 +49,6 @@
       <!-- Kilit Aç / Zaten Açık Durumu -->
       <div class="unlock-section">
         <div v-if="userSvipLevel >= currentLevel" class="unlock-status unlocked">
-          <span class="unlock-icon">✅</span>
           <span>SVIP {{ currentLevel }} Açık</span>
         </div>
         <div v-else class="unlock-status locked">
@@ -128,6 +127,42 @@
     </div>
 
   </div>
+
+  <!-- Bilgilendirme Modal -->
+  <Teleport to="body">
+    <div v-if="showInfo" class="info-overlay" @click.self="showInfo = false">
+      <div class="info-modal">
+        <div class="info-header">
+          <span class="info-title">SVIP Nedir?</span>
+          <button class="info-close" @click="showInfo = false">X</button>
+        </div>
+        <div class="info-body">
+          <p class="info-section-title">SVIP Nasil Acilir?</p>
+          <p>SVIP seviyelerini Coin harcayarak kalici olarak acabilirsin. Her seviye bir onceki seviyenin ustune ek ucret gerektirir.</p>
+
+          <p class="info-section-title">Fiyatlar</p>
+          <div class="info-price-list">
+            <div class="info-price-row" v-for="lvl in svipLevelData" :key="lvl.level">
+              <span class="info-level">SVIP {{ lvl.level }}</span>
+              <span class="info-cost">{{ formatCoins(lvl.required_points) }} Coin</span>
+            </div>
+          </div>
+
+          <p class="info-section-title">Onemli Bilgiler</p>
+          <ul class="info-list">
+            <li>SVIP seviyeleri kalicidir, suresi dolmaz.</li>
+            <li>Sadece bir ust seviyeye gecis yapilabilir.</li>
+            <li>Her seviyede ozel hediyeler ve ayricaliklar kazanirsin.</li>
+            <li>Coin bakiyen yetersizse once Coin yuklemen gerekir.</li>
+            <li>Seviye dusme sistemi yoktur, kazandigin seviye senindir.</li>
+          </ul>
+
+          <p class="info-section-title">SVIP Ayricaliklari</p>
+          <p>Her SVIP seviyesinde ozel cerceveler, giris efektleri, renkli isim ve daha fazla ozellik acilir. Seviye arttikca ayricaliklar da artar.</p>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -216,6 +251,7 @@ const userAvatar = ref('https://i.pravatar.cc/150?img=11')
 const userCoins = ref(0)           // Kullanıcının coin bakiyesi
 const userSvipLevel = ref(0)       // Kullanıcının gerçek SVIP seviyesi
 const isUnlocking = ref(false)     // Kilit açma işlemi devam ediyor mu
+const showInfo = ref(false)        // Bilgilendirme modal'ı açık mı
 
 // ─── SVIP Seviye Tablosu (Supabase'den) ──────────────────────────────────────
 const svipLevelData = ref([])  // [{level, required_points, ...}]
@@ -551,21 +587,21 @@ const goBack = () => {
   gap: 10px;
   padding: 16px;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .unlock-status.unlocked {
-  border-color: rgba(74, 222, 128, 0.3);
-  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   flex-direction: row;
   justify-content: center;
   font-size: 16px;
   font-weight: bold;
-  color: #4ade80;
-}
-.unlock-icon {
-  font-size: 20px;
+  color: var(--accent);
 }
 .unlock-info {
   display: flex;
@@ -760,5 +796,120 @@ const goBack = () => {
   font-size: 14px;
   font-style: italic;
   width: 100%;
+}
+
+/* Bilgilendirme Modal */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.info-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.info-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.info-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f5f5f5;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.info-body {
+  padding: 20px;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.info-body p {
+  margin: 0 0 12px 0;
+}
+.info-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e91e8a;
+  margin: 20px 0 8px 0 !important;
+}
+.info-section-title:first-child {
+  margin-top: 0 !important;
+}
+.info-price-list {
+  background: #fdf2f8;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.info-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 4px;
+  border-bottom: 1px solid rgba(233, 30, 138, 0.08);
+}
+.info-price-row:last-child {
+  border-bottom: none;
+}
+.info-level {
+  font-weight: 600;
+  color: #e91e8a;
+  font-size: 13px;
+}
+.info-cost {
+  font-weight: 700;
+  color: #333;
+  font-size: 13px;
+}
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+.info-list li {
+  padding: 6px 0 6px 16px;
+  position: relative;
+  color: #555;
+  font-size: 13px;
+}
+.info-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 13px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e91e8a;
 }
 </style>
