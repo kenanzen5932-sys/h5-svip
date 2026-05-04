@@ -128,41 +128,40 @@
 
   </div>
 
-  <!-- Bilgilendirme Modal -->
-  <Teleport to="body">
-    <div v-if="showInfo" class="info-overlay" @click.self="showInfo = false">
-      <div class="info-modal">
-        <div class="info-header">
-          <span class="info-title">SVIP Nedir?</span>
-          <button class="info-close" @click="showInfo = false">X</button>
-        </div>
-        <div class="info-body">
-          <p class="info-section-title">SVIP Nasil Acilir?</p>
-          <p>SVIP seviyelerini Coin harcayarak kalici olarak acabilirsin. Her seviye bir onceki seviyenin ustune ek ucret gerektirir.</p>
+  <!-- Bilgilendirme Tam Sayfa -->
+  <div v-if="showInfo" class="info-page">
+    <header class="info-page-header">
+      <div class="info-back-btn" @click="showInfo = false">
+        <span class="back-arrow">&#8249;</span>
+      </div>
+      <span class="info-page-title">SVIP Nedir?</span>
+      <div style="width: 40px;"></div>
+    </header>
+    <div class="info-page-body">
+      <p class="info-section-title">SVIP Nasil Acilir?</p>
+      <p>SVIP seviyelerini Coin harcayarak kalici olarak acabilirsin. Her seviye bir onceki seviyenin ustune ek ucret gerektirir.</p>
 
-          <p class="info-section-title">Fiyatlar</p>
-          <div class="info-price-list">
-            <div class="info-price-row" v-for="lvl in svipLevelData" :key="lvl.level">
-              <span class="info-level">SVIP {{ lvl.level }}</span>
-              <span class="info-cost">{{ formatCoins(lvl.required_points) }} Coin</span>
-            </div>
-          </div>
-
-          <p class="info-section-title">Onemli Bilgiler</p>
-          <ul class="info-list">
-            <li>SVIP seviyeleri kalicidir, suresi dolmaz.</li>
-            <li>Sadece bir ust seviyeye gecis yapilabilir.</li>
-            <li>Her seviyede ozel hediyeler ve ayricaliklar kazanirsin.</li>
-            <li>Coin bakiyen yetersizse once Coin yuklemen gerekir.</li>
-            <li>Seviye dusme sistemi yoktur, kazandigin seviye senindir.</li>
-          </ul>
-
-          <p class="info-section-title">SVIP Ayricaliklari</p>
-          <p>Her SVIP seviyesinde ozel cerceveler, giris efektleri, renkli isim ve daha fazla ozellik acilir. Seviye arttikca ayricaliklar da artar.</p>
+      <p class="info-section-title">Fiyatlar</p>
+      <div class="info-price-list">
+        <div class="info-price-row" v-for="lvl in svipLevelData" :key="lvl.level">
+          <span class="info-level">SVIP {{ lvl.level }}</span>
+          <span class="info-cost">{{ formatCoins(lvl.required_points) }} Coin</span>
         </div>
       </div>
+
+      <p class="info-section-title">Onemli Bilgiler</p>
+      <ul class="info-list">
+        <li>SVIP seviyeleri kalicidir, suresi dolmaz.</li>
+        <li>Sadece bir ust seviyeye gecis yapilabilir.</li>
+        <li>Her seviyede ozel hediyeler ve ayricaliklar kazanirsin.</li>
+        <li>Coin bakiyen yetersizse once Coin yuklemen gerekir.</li>
+        <li>Seviye dusme sistemi yoktur, kazandigin seviye senindir.</li>
+      </ul>
+
+      <p class="info-section-title">SVIP Ayricaliklari</p>
+      <p>Her SVIP seviyesinde ozel cerceveler, giris efektleri, renkli isim ve daha fazla ozellik acilir. Seviye arttikca ayricaliklar da artar.</p>
     </div>
-  </Teleport>
+  </div>
 </template>
 
 <script setup>
@@ -798,62 +797,55 @@ const goBack = () => {
   width: 100%;
 }
 
-/* Bilgilendirme Modal */
-.info-overlay {
+/* Bilgilendirme Tam Sayfa */
+.info-page {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: #fff;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.info-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(44px, env(safe-area-inset-top)) 16px 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+.info-back-btn {
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  cursor: pointer;
+  font-size: 32px;
+  color: #e91e8a;
+  line-height: 1;
 }
-.info-modal {
-  background: #fff;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 400px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-.info-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 20px 12px 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-.info-title {
-  font-size: 20px;
+.info-page-title {
+  font-size: 18px;
   font-weight: 800;
   color: #1a1a1a;
 }
-.info-close {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: #f5f5f5;
-  border-radius: 50%;
-  font-size: 14px;
-  font-weight: 700;
-  color: #999;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.info-body {
-  padding: 20px;
+.info-page-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 20px));
   color: #333;
   font-size: 14px;
   line-height: 1.7;
+  -webkit-overflow-scrolling: touch;
 }
-.info-body p {
+.info-page-body p {
   margin: 0 0 12px 0;
 }
 .info-section-title {
