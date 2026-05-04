@@ -260,13 +260,10 @@ const showInfo = ref(false)        // Bilgilendirme modal'ı açık mı
 const svipLevelData = ref([])  // [{level, required_points, ...}]
 const isLoading = ref(true)
 
-// Fark ücreti: hedef seviye fiyatı - mevcut seviye fiyatı
+// Tam fiyat: hedef seviyenin tam ücreti (fark yok)
 const diffCost = computed(() => {
   const targetData = svipLevelData.value.find(l => l.level === currentLevel.value)
-  const currentData = svipLevelData.value.find(l => l.level === userSvipLevel.value)
-  const targetCost = targetData ? targetData.required_points : 0
-  const currentCost = currentData ? currentData.required_points : 0
-  return Math.max(0, targetCost - currentCost)
+  return targetData ? targetData.required_points : 0
 })
 
 // Toast sistemi
