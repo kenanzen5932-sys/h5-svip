@@ -250,7 +250,7 @@ watch(currentLevel, async () => {
 
 // ─── Kullanıcı Verileri ───────────────────────────────────────────────────────
 const userName = ref('...')
-const userAvatar = ref('https://i.pravatar.cc/150?img=11')
+const userAvatar = ref('/fallback-avatar.png')
 const userCoins = ref(0)           // Kullanıcının coin bakiyesi
 const userSvipLevel = ref(0)       // Kullanıcının gerçek SVIP seviyesi
 const isUnlocking = ref(false)     // Kilit açma işlemi devam ediyor mu
@@ -383,7 +383,7 @@ const loadUserData = async () => {
     .eq('id', userId).single()
   if (error || !data) return
   userName.value = data.username || 'NEVER'
-  userAvatar.value = data.avatar_url || 'https://i.pravatar.cc/150?img=11'
+  userAvatar.value = data.avatar_url || '/fallback-avatar.png'
   userCoins.value = data.coins || 0
   userSvipLevel.value = (data.vip_type === 'svip') ? (data.vip_level || 0) : 0
   currentLevel.value = Math.max(1, userSvipLevel.value > 0 ? userSvipLevel.value : 1)
